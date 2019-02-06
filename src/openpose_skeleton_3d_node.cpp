@@ -1,3 +1,4 @@
+//Auther: Keishi Ishihara
 #include <iostream>
 #include <Eigen/Dense>
 #include <opencv2/opencv.hpp>
