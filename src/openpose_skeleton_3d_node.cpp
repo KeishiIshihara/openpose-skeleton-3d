@@ -95,11 +95,14 @@ public:
   OpenPoseSkeleton3dNode()
     : nh(),
       private_nh("~"),
-      //cocos_sub(nh, "/openpose/detections/pose", 10),
+      // cocos_sub(nh, "/openpose/detections/pose", 10),
       cocos_sub(nh, "/coco_keypoints/pose", 10),
-      image_sub(nh, "/kinect2/hd/image_depth_rect", 45),
-      camera_info_sub(nh, "/kinect2/hd/camera_info", 45),
-      sync(SyncPolicy(45), cocos_sub, image_sub, camera_info_sub),
+      // image_sub(nh, "/kinect2/hd/image_depth_rect", 45),
+      image_sub(nh, "/kinect_/depth/image_raw", 45),
+      // camera_info_sub(nh, "/kinect2/hd/camera_info", 45),
+      camera_info_sub(nh, "/kinect_/depth/camera_info", 45),
+      sync(SyncPolicy(1024), cocos_sub, image_sub, camera_info_sub),
+      // cocos_3d_pub(nh.advertise<openpose_skeleton_3d::COCO3d_ARR>("/pose3d", 30)),
       cocos_3d_pub(private_nh.advertise<openpose_skeleton_3d::COCO3d_ARR>("pose3d", 30)),
       markers_pub(private_nh.advertise<visualization_msgs::MarkerArray>("markers", 30))
   {
@@ -112,6 +115,7 @@ private:
     const Eigen::Matrix3d inv_camera_matrix = camera_matrix.inverse();
 
     auto depth_image = cv_bridge::toCvCopy(depth_image_msg);
+    depth_image->image.convertTo(depth_image->image, CV_16UC1, 1000.0);
     //cv::imshow("depth",depth_image->image);
     //cv::waitKey(50);
 
@@ -145,8 +149,10 @@ private:
 	std::cout << coco3d_proxy[j].z << std::endl;
       }
     }
-
+    std::cout << "pub" << std::endl;
     cocos_3d_pub.publish(cocos_3d_msg);
+    std::cout << "pub2" << std::endl;
+
 
     if(markers_pub.getNumSubscribers()) {
       markers_pub.publish(create_markers(cocos_3d_msg));
